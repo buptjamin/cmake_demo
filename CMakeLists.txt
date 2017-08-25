@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.2.1)
 #set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Toolchain-arm-linux-gnueabihf.cmake)
+set(CMAKE_INSTALL_PATH "/home/jamin/opt/jrun/lib")
+set(CMAKE_INSTALL_PATH_USE_LINK_PATH TRUE)
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,${CMAKE_INSTALL_PATH}")
 
 # library Version
 set(PRO_VERSION_MAJOR 1)
@@ -8,11 +11,12 @@ set(PRO_VERSION_PATCH 0)
 execute_process( 
     COMMAND git rev-list HEAD 
     COMMAND wc -l
+    COMMAND tr -d '\n'
+    COMMAND sed s/[[:space:]]//g
     OUTPUT_VARIABLE GIT_COMMIT_VERSION
     )
-set(PRO_VERSION_DEVELOP ${GIT_COMMIT_VERSION})
 set(PRO_VERSION_SO ${PRO_VERSION_MAJOR}.${PRO_VERSION_MINOR}.${PRO_VERSION_PATCH})
-set(PRO_VERSION_API ${PRO_VERSION_DEVELOP})
+set(PRO_VERSION_API ${GIT_COMMIT_VERSION})
 
 PROJECT("TODO_type_your_project_name_here")
 
@@ -120,11 +124,22 @@ endif(${BUILD_TYPE} MATCHES "Debug")
 #### ----------------------- TODO. 1 Start ----------------- ####
 #### ---------------- Compile Source File Config ----------- ####
 
-file(GLOB XXOO_all_srcs 
+file(GLOB XXOO_all_srcs1
     LIST_DIRECTORIES false 
-    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/libA/*.c"
     )
+
+file(GLOB XXOO_all_srcs2
+    LIST_DIRECTORIES false 
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/libB/*.c"
+    )
+
+file(GLOB XXOO_all_main
+    LIST_DIRECTORIES false 
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/exe/*.c"
+    )
+
+
 
 #### ------------------------------1 End ------------------- ####
 #### ---------------- Compile Source File Config ----------- ####
@@ -143,6 +158,15 @@ include_directories(${OPENCV_INCLUDE_DIR})
 #### ------------------------------2 End ------------------- ####
 #### ---------------- Include Header File Config ----------- ####
 #### ------------------------------------------------------- ####
+file(GLOB XXOO_all_include_1
+    LIST_DIRECTORIES false 
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/libA/*.h"
+    )
+
+file(GLOB XXOO_all_include_2
+    LIST_DIRECTORIES false 
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/libB/*.h"
+    )
 
 
 
@@ -150,13 +174,21 @@ include_directories(${OPENCV_INCLUDE_DIR})
 link_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 # -----------------------------------Module Compile----------------------------- #
-add_library(${PROJECT_NAME} SHARED ${XXOO_all_srcs})
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PRO_VERSION_SO} SOVERSION ${PRO_VERSION_DEVELOP})
+add_library(shared_A SHARED ${XXOO_all_srcs1})
+set_target_properties(shared_A PROPERTIES VERSION ${PRO_VERSION_SO} SOVERSION ${PRO_VERSION_API})
+
+add_library(static_B STATIC ${XXOO_all_srcs2})
+set_target_properties(static_B PROPERTIES VERSION ${PRO_VERSION_SO} SOVERSION ${PRO_VERSION_API})
+
+add_executable(${PROJECT_NAME} ${XXOO_all_main})
 
 target_link_libraries(${PROJECT_NAME} 
+    shared_A
+    static_B
     ${OpenCV_LIBS}
     )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # ------------------------------------------------------------------------------ #
 # -----------------------------------Module Build Msg--------------------------- #
@@ -171,8 +203,25 @@ if(MO_CMAKE_DEBUG_FILE_MSGS)
         message("   -- ${Green}${dir}${ColourReset}")
     endforeach()
     message( " Moudle SOURCES : ")
-    foreach(dir ${XXOO_all_srcs})
+    foreach(dir ${XXOO_all_srcs1})
         message("   -- ${Green}${dir}${ColourReset}")
     endforeach()
+    foreach(dir ${XXOO_all_srcs2})
+        message("   -- ${Green}${dir}${ColourReset}")
+    endforeach()
+    message( " Git Version    : ")
+    message("   -- It's ${Green}${GIT_COMMIT_VERSION}${ColourReset}.")
 endif(MO_CMAKE_DEBUG_FILE_MSGS)
 
+install(TARGETS ${PROJECT_NAME} shared_A static_B
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib/static
+    )
+
+foreach(hdr ${XXOO_all_include_1})
+    install( FILES "${hdr}" DESTINATION include)
+endforeach(hdr)
+foreach(hdr ${XXOO_all_include_2})
+    install( FILES "${hdr}" DESTINATION include)
+endforeach(hdr)
