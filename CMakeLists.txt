@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.2.1)
 #set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Toolchain-arm-linux-gnueabihf.cmake)
-set(CMAKE_INSTALL_PATH "/home/jamin/opt/jrun/lib")
-set(CMAKE_INSTALL_PATH_USE_LINK_PATH TRUE)
-SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,${CMAKE_INSTALL_PATH}")
+#set(CMAKE_INSTALL_PATH "/home/jamin/opt/")
+set(CMAKE_INSTALL_PREFIX "/home/jamin/opt/")
+#set(INSTALL_PREFIX "/home/jamin/opt/")
+#set(CMAKE_INSTALL_PATH_USE_LINK_PATH TRUE)
+#set(BUILD_WITH_INSTALL_PATH ON)
+#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,${CMAKE_INSTALL_PATH}")
 
 # library Version
 set(PRO_VERSION_MAJOR 1)
@@ -188,7 +191,7 @@ target_link_libraries(${PROJECT_NAME}
     ${OpenCV_LIBS}
     )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+#set_target_properties(${PROJECT_NAME} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # ------------------------------------------------------------------------------ #
 # -----------------------------------Module Build Msg--------------------------- #
